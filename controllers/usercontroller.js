@@ -1,4 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
+import userModel from '../models/userModel.js';
+import userSchema from '../validators/userValidator.js';
+
 let userList= [];
 
 export const getUsers =(req,res) =>{  
@@ -6,12 +8,20 @@ export const getUsers =(req,res) =>{
 }
 
 export const createUser = (req,res)=>{
-    const user = req.body;
-    userList.push({...user, id:uuidv4()});
-    res.send("user added");    
+
+    const { error, value } = userSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        const messages = error.details.map((detail) => detail.message);
+        return res.status(400).json({ errors: messages });
+    }
+    const user = new userModel(value.firstName, value.lastName, value.age);
+  
+    userList.push(user);
+    res.send("user added");
 }
 
-export const getUserById = (req,res) =>{    
+export const getUser = (req,res) =>{    
     const {id} = req.params;
     const foundUser = userList.find((user) =>user.id === id);
     res.send(foundUser);
